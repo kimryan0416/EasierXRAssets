@@ -5,33 +5,33 @@ using UnityEngine.XR;
 
 public class XRHand : MonoBehaviour
 {   
+
     // NOT SERIALIZED [Tooltip("What Input Device matches with the inputCharacteristics defined - retrieved from Init")]
     private InputDevice m_XRdevice;
     public InputDevice XRdevice {
         get {   return m_XRdevice;  }
-        set {   return; }
+        set {}
     }
     // NOT SERIALIZED [Tooltip("Storing characteristics")]
     private InputDeviceCharacteristics m_inputCharacteristics;
     public InputDeviceCharacteristics inputCharacteristics {
         get {   return m_inputCharacteristics;  }
-        set {   return; }
+        set {}
     }
 
     // NOT SERIALIZED [Tooltip("Check to make sure that we're actually instantiating")]
     private bool m_initialized = false;
     public bool initialized {
         get {   return m_initialized;   }
-        set {   return; }
+        set {}
     }
 
-    // NOT SERIALIZED [Tooltip("All button mappings")]
-    private Dictionary<string, ButtonMapping> m_inputs = new Dictionary<string, ButtonMapping>();
+    [SerializeField] [Tooltip("All button mappings")]
+    private List<ButtonMapping> m_inputs = new List<ButtonMapping>();
     private Axis2DMapping m_thumbstick;
 
-    private enum DebugOption {  Off, On, From_Controller }
-    [SerializeField] [Tooltip("Debug Mode")]
-    private DebugOption m_debugMode = DebugOption.Off;
+    [SerializeField] [Tooltip("Debug Mode toggle")]
+    private bool m_debugMode = false;
 
     /*
     [SerializeField]
@@ -90,10 +90,12 @@ public class XRHand : MonoBehaviour
     }
     */
 
-    public void Init(InputDevice ds, InputDeviceCharacteristics characteristics, bool debug) {
+    public void Init(InputDevice ds, InputDeviceCharacteristics characteristics) {
+        // Get input device characteristics from Init call from XRController
         m_XRdevice = ds;
         m_inputCharacteristics = characteristics;
-        if (m_debugMode == DebugOption.From_Controller) m_debugMode = (debug) ? DebugOption.On : DebugOption.Off;
+        // Set debug mode to false by default if our debug logger doesn't work
+        m_debugMode = (DebugLogger.current == null) ? false : m_debugMode;
         ResetInputs();
         /*
         // Each hand comes with two detectors: a grip detector, and a tooltip detector
@@ -141,52 +143,69 @@ public class XRHand : MonoBehaviour
     }
 
     public void ResetInputs() {
-        if (m_XRdevice == null) return;
-        m_inputs = new Dictionary<string, ButtonMapping>();
-        m_thumbstick = null;
-        bool debug = (m_debugMode == DebugOption.On) ? true : false;
+        if (m_XRdevice == null || m_inputs.Count == 0) return;
+        // Reset input mappings
 
-        m_thumbstick = new Axis2DMapping(m_XRdevice, CommonUsages.primary2DAxis,"Left Thumb Joystick", debug);
-        m_inputs.Add("index", new ButtonMapping(m_XRdevice,CommonUsages.triggerButton, "Left Trigger", debug));
-        m_inputs.Add("grip",  new ButtonMapping(m_XRdevice,CommonUsages.gripButton, "Left Grip", debug));
-        m_inputs.Add("one",   new ButtonMapping(m_XRdevice,CommonUsages.primaryButton, "Left One", debug));
-        m_inputs.Add("two",   new ButtonMapping(m_XRdevice,CommonUsages.secondaryButton, "Left Two", debug));
-        m_inputs.Add("thumbClick",new ButtonMapping(m_XRdevice,CommonUsages.primary2DAxisClick, "Left Thumb Click", debug));
-        if (m_inputCharacteristics == InputDeviceCharacteristics.Left) m_inputs.Add("start", new ButtonMapping(m_XRdevice,CommonUsages.menuButton, "Start Button", debug));
+        foreach(ButtonMapping bm in m_inputs) {
+            bm.Init(m_XRdevice, m_debugMode);
+        }
+
+        /*
+        m_inputs = new Dictionary<string, ButtonMapping>();
+        // Set thumbstick
+        m_thumbstick = new Axis2DMapping(m_XRdevice, CommonUsages.primary2DAxis,"Thumbstick", m_debugMode);
+        // Set buttons
+        m_inputs.Add("index", new ButtonMapping(m_XRdevice,CommonUsages.triggerButton, "Trigger", m_debugMode));
+        m_inputs.Add("grip",  new ButtonMapping(m_XRdevice,CommonUsages.gripButton, "Grip", m_debugMode));
+        m_inputs.Add("one",   new ButtonMapping(m_XRdevice,CommonUsages.primaryButton, "One", m_debugMode));
+        m_inputs.Add("two",   new ButtonMapping(m_XRdevice,CommonUsages.secondaryButton, "Two", m_debugMode));
+        m_inputs.Add("thumbClick",new ButtonMapping(m_XRdevice,CommonUsages.primary2DAxisClick, "Thumbstick Click", m_debugMode));
+        m_inputs.Add("start", new ButtonMapping(m_XRdevice,CommonUsages.menuButton, "Start Button", m_debugMode));
+        */
+        // End
         return;
     }
 
     public void CheckInputs() {
-        if (m_XRdevice == null) return;
-        m_thumbstick.CheckPressed();
-        foreach(ButtonMapping bm in m_inputs.Values) {
-            bm.CheckPressed();
+        // Return early if our XR device, thumbstick, or inputs are null
+        if (m_XRdevice == null || m_inputs.Count == 0) return;
+        // Check thumbstick
+        //m_thumbstick.CheckPressed();
+        // Check buttons
+        foreach(ButtonMapping bm in m_inputs) {
+            bm.CheckStatus();
         }
+        // Return early
+        return;
     }
 
     public void UpdateInputs() {
-        if (m_XRdevice == null) return;
+        /*
+        // Return early if our XR device, thumbstick, or inputs are null
+        if (m_XRdevice == null || m_thumbstick == null || m_inputs.Count == 0) return;
         // Thumbstick
         XRController.current.ThumbDirection(m_XRdevice, m_thumbstick.thumbPosition, m_thumbstick.distance, m_thumbstick.angle);
         // Index
         if (m_inputs["index"].value == 1f) XRController.current.TriggerDown(m_XRdevice);
-        else if (m_inputs["index"].value == -1f) XRController.current.TriggerUp(m_XRdevice);
+        if (m_inputs["index"].value == -1f) XRController.current.TriggerUp(m_XRdevice);
         // Grip
         if (m_inputs["grip"].value == 1f) XRController.current.GripDown(m_XRdevice);
-        else if (m_inputs["grip"].value == -1f) XRController.current.GripUp(m_XRdevice);
+        if (m_inputs["grip"].value == -1f) XRController.current.GripUp(m_XRdevice);
         // One
         if (m_inputs["one"].value == 1f) XRController.current.OneDown(m_XRdevice);
-        else if (m_inputs["one"].value == -1f) XRController.current.OneUp(m_XRdevice);
+        if (m_inputs["one"].value == -1f) XRController.current.OneUp(m_XRdevice);
         // Two
         if (m_inputs["two"].value == 1f) XRController.current.TwoDown(m_XRdevice);
-        else if (m_inputs["two"].value == -1f) XRController.current.TwoUp(m_XRdevice);
+        if (m_inputs["two"].value == -1f) XRController.current.TwoUp(m_XRdevice);
         // ThumbPress
         if (m_inputs["thumbClick"].value == 1f) XRController.current.ThumbPress(m_XRdevice);
-        else if (m_inputs["thumbClick"].value == -1f) XRController.current.ThumbRelease(m_XRdevice);
-        // return if Right Hand, otherwise continue with start button
-        if (m_inputCharacteristics == InputDeviceCharacteristics.Right) return;
-        if (m_inputs["start"].value == 1f) XRController.current.StartDown();
-        else if (m_inputs["start"].value == -1f) XRController.current.StartUp();
+        if (m_inputs["thumbClick"].value == -1f) XRController.current.ThumbRelease(m_XRdevice);
+        // Start button
+        if (m_inputs["start"].value == 1f) XRController.current.StartDown(m_XRdevice);
+        if (m_inputs["start"].value == -1f) XRController.current.StartUp(m_XRdevice);
+        */
+        // End
+        return;
     }
 
     /*

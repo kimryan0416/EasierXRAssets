@@ -60,11 +60,22 @@ public class DebugLogger : MonoBehaviour
     [SerializeField] [Tooltip("List of all gameObjects listed under the debugger")]
     private List<GameObject> m_debugObjects = new List<GameObject>();
 
+    [SerializeField] [Tooltip("Set Active Status")]
+    private bool m_activeStatus = false;
+    public bool activeStatus {
+        get {   return m_activeStatus;  }
+        set {   SetStatus(value);       }
+    }
+
     private void Awake() {
         current = this;
     }
+    private void Start() {
+        SetStatus(m_activeStatus);
+    }
     private void Update() {
         if (m_defaultTextbox == null) return;
+
         m_defaultTextbox.fontSize = m_fontSize;
         
         if (m_lines.Count == 0) return;
@@ -112,11 +123,7 @@ public class DebugLogger : MonoBehaviour
     */
 
     public void SetStatus(bool en) {
-        /*
-        foreach(CustomTextBox ctb in m_textBoxes) {
-            ctb.textbox.gameObject.SetActive(en);
-        }
-        */
+        m_activeStatus = en;
         m_defaultTextbox.gameObject.SetActive(en);
         foreach(GameObject g in m_debugObjects) {
             g.SetActive(en);

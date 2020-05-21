@@ -12,13 +12,15 @@ public class XRLocomotion : MonoBehaviour
     private Transform m_rig = null;
     // NOT SERIALIZED [Tooltip("Reference to XRRig's External Collider)]
     //private ExternalCollider m_rigEC = null;
+    /*
     [SerializeField] [Tooltip("Which hand controls the locomotion and rotation, depending on m_locomotionHandChoice and m_rotationHandChoice respectively")]
     private XRHand m_locomotionHand = null, m_rotationHand = null;
+    */
 
     // NOT SERIALIZED
-    private enum MovementOption {Thumbstick,Teleportation,Both,Custom}
+    private enum MovementOption {Continuous,Instant,Teleport,SmoothDamp}
     [SerializeField] [Tooltip("How will our player move?")]
-    private MovementOption m_movementOption = MovementOption.Thumbstick;
+    private MovementOption m_movementOption = MovementOption.Instant;
     [SerializeField] [Tooltip("Will thumbstick movement be relative to your head's orientation while walking? If not, it'll only be relative to your head's orientation at rest")]
     private bool m_resetOrientationWhileMoving = false;
     [SerializeField] [Tooltip("Speed of player in M/S for thumbstick")]
@@ -27,17 +29,19 @@ public class XRLocomotion : MonoBehaviour
     private Vector3 m_movementTranslation = Vector3.zero;
 
     // NOT SERIALIZED
-    private enum RotationOption {Thumbstick,Custom}
+    private enum RotationOption {Continuous,Snap}
     [SerializeField] [Tooltip("Rotation type - thumbstick or no?")]
-    private RotationOption m_rotationOption = RotationOption.Thumbstick;
-    [SerializeField] [Tooltip("Determine if rotation is snapped or continuous")]
-    private bool m_snapRotation = false;
+    private RotationOption m_rotationOption = RotationOption.Continuous;
     [SerializeField] [Tooltip("Rotation amount (degrees per second) - only applies if rotating with joystick")]
     private float m_rotationRate = 10f;
     // NOT SERIALIZED [Tooltip("Checks if we already rotated or not - only used with snap rotation")]
     private bool m_alreadyRotated = false;
     // NOT SERIALIZED [Tooltip("Track rotation offset")]
     private float m_rotationOffset = 0f;
+    public float rotationOffset {
+        get {   return m_rotationOffset;    }
+        set {}
+    }
     // NOT SERIALIZED [Tooltip("Reference to initial rotation of rig")]
     private Vector3 m_rigInitialForward;
 
@@ -72,6 +76,7 @@ public class XRLocomotion : MonoBehaviour
         // Set the rig's initial foward position
         m_rigInitialForward = m_rig.transform.forward;    
         // Adjust movement option    
+        /*
         switch(m_movementOption) {
             case(MovementOption.Thumbstick):
                 XRController.current.onThumbDirection += Movement;
@@ -90,6 +95,7 @@ public class XRLocomotion : MonoBehaviour
                 XRController.current.onThumbDirection += Rotation;
                 break;
         }
+        */
         // End
         return;
     }
@@ -105,9 +111,10 @@ public class XRLocomotion : MonoBehaviour
     }
     */
 
-    private void Movement(InputDevice device, Vector2 thumbPos, float distance, float angle) {
+    // Particularly when moving with the joystick
+    public void ContinuousMovement(InputDevice device, float buttonVal, Vector2 pos) {
         // Check - return early if the XR Devices don't correspond with each other
-        if (!m_movementAllowed || (m_locomotionHand != null && m_locomotionHand.XRdevice != device)) return;
+        if (!m_movementAllowed) return;
         //if (m_rigEC.colliding) return;
         // So joystick movement will work like this:
         // Joysticks will control motion such that they are relative to the player's INITIAL camera forward position at rest
@@ -115,13 +122,14 @@ public class XRLocomotion : MonoBehaviour
         // Only when you are at rest (aka distance < 0.01f) when the orientation reorients itself
         //float rigRotationOffset = 0f;
         float angleOffset = m_rotationOffset;
-        if (m_resetOrientationWhileMoving || distance < 0.01f) {
+        float distance = pos.magnitude;
+        if (m_resetOrientationWhileMoving || distance < 0.1f) {
             m_camForward = mainCamera.transform.forward;
             m_camRight = mainCamera.transform.right;
         }
         m_camForward.y = 0f;
         m_camRight.y = 0f;
-        m_movementTranslation = Quaternion.AngleAxis(-1f * angleOffset,Vector3.up) * (m_camForward * thumbPos.y + m_camRight * thumbPos.x) * m_movementSpeed * Time.deltaTime;
+        m_movementTranslation = Quaternion.AngleAxis(-1f * angleOffset,Vector3.up) * (m_camForward * pos.y + m_camRight * pos.x) * m_movementSpeed * Time.deltaTime;
         //m_movementTranslation = (m_camForward * thumbPos.y + m_camRight * thumbPos.x) * m_movementSpeed * Time.deltaTime;
         if (m_movementTranslation.magnitude>0) {
             m_rig.Translate(m_movementTranslation);
@@ -132,9 +140,24 @@ public class XRLocomotion : MonoBehaviour
         return;
     }
 
-    private void Rotation(InputDevice device, Vector2 thumbPos, float distance, float angle) {
+    public void MovementInstant(Vector3 pos) {
+        m_rig.position = pos;
+        /*
+        float angleOffset = m_rotationOffset;
+        m_camForward = mainCamera.transform.forward;
+        m_camRight = mainCamera.transform.right;
+        m_camForward.y = 0f;
+        m_camRight.y = 0f;
+        m_movementTranslation = Quaternion.AngleAxis(-1f * angleOffset,Vector3.up) * (m_camForward * amount.y + m_camRight * amount.x) * m_movementSpeed * Time.deltaTime;
+        if (m_movementTranslation.magnitude>0) {
+            m_rig.Translate(m_movementTranslation);
+        }
+        */
+    }
+
+    public void Rotation(InputDevice device, float buttonVal, Vector2 pos) {
         // Check - return early if the XR Devices don't correspond with each other
-        if (!m_rotationAllowed || (m_rotationHand != null && m_rotationHand.XRdevice != device)) return;
+        if (!m_rotationAllowed) return;
 
         // Rotation is dependent on how much "Left" or "Right" the joystick of choice is.
         // For example, if the joystick's X value is 0.1, then the rotation is small... but if the joystick's Y value is 1, then it rotates at the full expected rate.
@@ -142,20 +165,53 @@ public class XRLocomotion : MonoBehaviour
         // If we're set to Snap rotation, then we rotate only once and reset when the thumbstick's X < 0.5f
         // If we're set to Continuous, this function runs all the time
 
-        if (m_snapRotation && m_alreadyRotated) {
-            if (Mathf.Abs(thumbPos.x) < 0.5f) m_alreadyRotated = false;
+        if (m_rotationOption == RotationOption.Snap && m_alreadyRotated) {
+            if (Mathf.Abs(pos.x) < 0.5f) m_alreadyRotated = false;
             return;
         }
         // Prevent dead-zoneness
-        if (m_snapRotation && Mathf.Abs(thumbPos.x) < 0.5f) return;
+        if (m_rotationOption == RotationOption.Snap && Mathf.Abs(pos.x) < 0.5f) return;
 
-        float angleToRotate = (m_snapRotation) ? m_rotationRate * Mathf.Sign(thumbPos.x) : m_rotationRate * thumbPos.x * Time.deltaTime;
+        float angleToRotate = (m_rotationOption == RotationOption.Snap) ? m_rotationRate * Mathf.Sign(pos.x) : m_rotationRate * pos.x * Time.deltaTime;
         m_rig.transform.Rotate(0f,angleToRotate,0f);
 
         m_rotationOffset = Vector3.Angle(m_rig.transform.forward, m_rigInitialForward);
         m_rotationOffset *= (m_rig.transform.forward.x >= m_rigInitialForward.x) ? 1f : -1f;
         m_alreadyRotated = true;
         return;
+    }
+
+    public void RotationDirectly(Vector2 pos) {
+        if (!m_rotationAllowed) return;
+        if (m_rotationOption == RotationOption.Snap && m_alreadyRotated) {
+            if (Mathf.Abs(pos.x) < 0.5f) m_alreadyRotated = false;
+            return;
+        }
+        // Prevent dead-zoneness
+        if (m_rotationOption == RotationOption.Snap && Mathf.Abs(pos.x) < 0.5f) return;
+        
+        float angleToRotate = (m_rotationOption == RotationOption.Snap) ? m_rotationRate * Mathf.Sign(pos.x) : m_rotationRate * pos.x * Time.deltaTime;
+        m_rig.transform.Rotate(0f,angleToRotate,0f);
+
+        m_rotationOffset = Vector3.Angle(m_rig.transform.forward, m_rigInitialForward);
+        m_rotationOffset *= (m_rig.transform.forward.x >= m_rigInitialForward.x) ? 1f : -1f;
+        m_alreadyRotated = true;
+    }
+    public void RotationDirectly(Vector2 pos, float angleAmount) {
+        if (!m_rotationAllowed) return;
+        if (m_rotationOption == RotationOption.Snap && m_alreadyRotated) {
+            if (Mathf.Abs(pos.x) < 0.5f) m_alreadyRotated = false;
+            return;
+        }
+        // Prevent dead-zoneness
+        if (m_rotationOption == RotationOption.Snap && Mathf.Abs(pos.x) < 0.5f) return;
+        
+        float angleToRotate = (m_rotationOption == RotationOption.Snap) ? angleAmount * Mathf.Sign(pos.x) : angleAmount * pos.x * Time.deltaTime;
+        m_rig.transform.Rotate(0f,angleToRotate,0f);
+
+        m_rotationOffset = Vector3.Angle(m_rig.transform.forward, m_rigInitialForward);
+        m_rotationOffset *= (m_rig.transform.forward.x >= m_rigInitialForward.x) ? 1f : -1f;
+        m_alreadyRotated = true;
     }
 
     public void SetLocomotionOptions(bool mov, bool rot) {

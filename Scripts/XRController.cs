@@ -14,6 +14,14 @@ public class XRController : MonoBehaviour
     // An XR experience only has a left or right hand. Never more...
     [SerializeField] [Tooltip("Reference to Left and Right Hand")]
     private XRHand m_leftHand = null, m_rightHand = null;
+    public XRHand leftHand {
+        get {   return m_leftHand;  }
+        set {}
+    }
+    public XRHand rightHand {
+        get {   return m_rightHand; }
+        set {}
+    }
 
     [SerializeField] [Tooltip("Should this start on awake?")]
     private bool m_runOnStart = true;
@@ -21,34 +29,34 @@ public class XRController : MonoBehaviour
     [Tooltip("tells the script if it should run its update or not - only runs when Init() has been called")]
     private bool m_initialized = false;
     
-    [SerializeField] [Tooltip("Bool for debugger")]
+    [SerializeField] [Tooltip("Debug Mode For This Script")]
     private bool m_debugMode = false;
+    public bool debugMode {
+        get {   return m_debugMode;     }
+        set {   m_debugMode = value;    }
+    }
 
     private void Awake() {
+        // Set the instance so that any script can call this from script
         current = this;
-        // get label selected by the user
-        //string featureLabel = Enum.GetName(typeof(ButtonOption), button);
- 
-        // find dictionary entry
-        //availableButtons.TryGetValue(featureLabel, out inputFeature);
-           
-        // init list
-        //inputDevices = new List<InputDevice>();
     }
 
     private void Start() {
+        // We run on start if we want this to work at the beginning
         if (m_runOnStart) Init();
     }
 
     public void Init()
     {
-        // Depending on m_debugMode, we either turn on or off our debugger
-        DebugLogger.current.SetStatus(m_debugMode);
-        // Start cycle for checking for controllers
+        // Check if a debug logger instance exists - if it doesn't we are forced to default to no debugging
+        m_debugMode = (DebugLogger.current == null) ? false : m_debugMode;
+        // Start cycle for checking for controllers 
+        //      - this MUST be continuously updated
+        //      - If the headset loses track of a controller, scripts cannot operate with it
+        //      Therefore, we have to constantly check
         StartCoroutine(CheckForControllers());
-        // Ensure that initialization has been recorded
+        // Ensure that initialization has been recorded - tells Update that it can run
         m_initialized = true;
-
         // End
         return;
     }
@@ -57,6 +65,7 @@ public class XRController : MonoBehaviour
         // Will be thrown out later
         List<InputDevice> toDiscard;
         while(true) {
+            // To prevent script-stopping, we yield return null early in the loop
             yield return null;
             // Get Left Hand Data, if a reference to it was found
             if (m_leftHand != null) {
@@ -65,7 +74,7 @@ public class XRController : MonoBehaviour
                 switch(toDiscard.Count) {
                     case(1):
                         if (m_leftHand.XRdevice == null || m_leftHand.XRdevice != toDiscard[0]) {
-                            m_leftHand.Init(toDiscard[0], InputDeviceCharacteristics.Left, m_debugMode);
+                            m_leftHand.Init(toDiscard[0], InputDeviceCharacteristics.Left);
                             if (m_debugMode) DebugLogger.current.AddLine(string.Format("Device name '{0}' with role '{1}'", toDiscard[0].name, toDiscard[0].characteristics.ToString()));
                         }
                         break;
@@ -77,7 +86,6 @@ public class XRController : MonoBehaviour
                         break;
                 }
             }
-
             // Get Right Hand Data
             if (m_rightHand != null) {
                 toDiscard = new List<InputDevice>();
@@ -85,7 +93,7 @@ public class XRController : MonoBehaviour
                 switch(toDiscard.Count) {
                     case(1):
                         if (m_rightHand.XRdevice == null || m_rightHand.XRdevice != toDiscard[0]) {
-                            m_rightHand.Init(toDiscard[0], InputDeviceCharacteristics.Right, m_debugMode);
+                            m_rightHand.Init(toDiscard[0], InputDeviceCharacteristics.Right);
                             if (m_debugMode) DebugLogger.current.AddLine(string.Format("Device name '{0}' with role '{1}'", toDiscard[0].name, toDiscard[0].characteristics.ToString()));
                         }
                         break;
@@ -103,14 +111,18 @@ public class XRController : MonoBehaviour
     private void Update() {
         // This won't run if we haven't initialized yet
         if (!m_initialized) return;
-        if (m_leftHand != null) m_leftHand.CheckInputs();
-        if (m_rightHand != null) m_rightHand.CheckInputs();
-        UpdateEvents();
-    }
-
-    private void UpdateEvents() {
-        if (m_leftHand != null) m_leftHand.UpdateInputs();
-        if (m_rightHand != null) m_rightHand.UpdateInputs();
+        // If our left hand isn't null, we process it
+        //  - Each hand has their own button inputs and update patterns
+        //  - We rely on each hand to update on their own
+        if (m_leftHand != null) {
+            m_leftHand.CheckInputs();
+            //m_leftHand.UpdateInputs();
+        }
+        // If our right hand isn't null, we process it
+        if (m_rightHand != null) {
+            m_rightHand.CheckInputs();
+            //m_rightHand.UpdateInputs();
+        }
     }
 
     // Events for grip
@@ -224,14 +236,14 @@ public class XRController : MonoBehaviour
         onThumbRelease?.Invoke(device);
     }
 
-    public event Action onStartDown, onStartUp;
-    public void StartDown() {
+    public event Action<InputDevice> onStartDown, onStartUp;
+    public void StartDown(InputDevice device) {
         if (m_debugMode) DebugLogger.current.AddLine("Start Down Registered");
-        onStartDown?.Invoke();
+        onStartDown?.Invoke(device);
     }
-    public void StartUp() {
+    public void StartUp(InputDevice device) {
         if (m_debugMode) DebugLogger.current.AddLine("Start Up Registered");
-        onStartUp?.Invoke();
+        onStartUp?.Invoke(device);
     }
 
     public event Action<InputDevice, Vector2, float, float> onLeftThumbDirection, onRightThumbDirection, onThumbDirection;
