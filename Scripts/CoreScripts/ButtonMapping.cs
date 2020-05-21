@@ -42,8 +42,7 @@ public class ButtonMapping
         {"indexTriggerValue", CommonUsages.trigger},
         // Oculus Grip Trigger
         {"gripTriggerValue", CommonUsages.grip},
-    }
-
+    };
 
     public enum ButtonOption {
         indexTriggerButton,
@@ -96,7 +95,7 @@ public class ButtonMapping
         m_featureLabel = Enum.GetName(typeof(ButtonOption), m_button);
         // find dictionary entry, depending on the nature of the button
         switch(m_button) {
-            case(ButtonOption.joystickDirection):
+            case(ButtonOption.joystickValue):
                 available2DSAxes.TryGetValue(m_featureLabel, out m_inputJoystickUsage);
                 m_isButton = false;
                 break;
