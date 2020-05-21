@@ -13,35 +13,24 @@ public class MyButtonEvent : UnityEvent<InputDevice, float, Vector2>
 [System.Serializable]
 public class ButtonMapping
 {
-
-
     // For the full list: https://docs.unity3d.com/Manual/xr_input.html
     static readonly Dictionary<string, InputFeatureUsage<bool>> availableButtons = new Dictionary<string, InputFeatureUsage<bool>>
     {
-        // Oculus: Index trigger - press
-        {"indexTriggerButton", CommonUsages.triggerButton},
-        // Oculus: Joystick - press
-        {"joystickButton", CommonUsages.primary2DAxisClick},
-        // Oculus: Start - press (only left controller)
-        {"menuButton", CommonUsages.menuButton },
-        // Oculus: grip trigger - press
-        {"gripTriggerButton", CommonUsages.gripButton },
-        // Oculus: Y/B - Press
-        {"secondaryButton", CommonUsages.secondaryButton },
-        // Oculus: X/A - Press
-        {"primaryButton", CommonUsages.primaryButton },
+        {"indexTriggerButton", CommonUsages.triggerButton},     // Oculus: Index trigger - press
+        {"joystickButton", CommonUsages.primary2DAxisClick},    // Oculus: Joystick - press
+        {"menuButton", CommonUsages.menuButton },               // Oculus: Start - press (only left controller)
+        {"gripTriggerButton", CommonUsages.gripButton },        // Oculus: grip trigger - press
+        {"secondaryButton", CommonUsages.secondaryButton },     // Oculus: Y/B - Press
+        {"primaryButton", CommonUsages.primaryButton },         // Oculus: X/A - Press
     };
     static readonly Dictionary<string, InputFeatureUsage<Vector2>> available2DSAxes = new Dictionary<string, InputFeatureUsage<Vector2>>
     {
-        // Oculus: Joystick - push direction
-        {"joystickValue", CommonUsages.primary2DAxis},
+        {"joystickValue", CommonUsages.primary2DAxis},  // Oculus: Joystick - push direction
     };
     static readonly Dictionary<string, InputFeatureUsage<float>> available1DAxes = new Dictionary<string, InputFeatureUsage<float>>
     {
-        // Oculus Index Trigger
-        {"indexTriggerValue", CommonUsages.trigger},
-        // Oculus Grip Trigger
-        {"gripTriggerValue", CommonUsages.grip},
+        {"indexTriggerValue", CommonUsages.trigger},    // Oculus Index Trigger
+        {"gripTriggerValue", CommonUsages.grip},        // Oculus Grip Trigger
     };
 
     public enum ButtonOption {
@@ -59,7 +48,6 @@ public class ButtonMapping
     [Tooltip("The deadzone limit - how far should the input be pressed/pushed?")]
     public float deadZoneLimit = 0.1f;
 
-    private InputDevice device;
     private InputFeatureUsage<bool> m_inputButtonUsage;
     private InputFeatureUsage<Vector2> m_inputJoystickUsage;
     private bool m_isButton;
@@ -68,11 +56,10 @@ public class ButtonMapping
     [SerializeField] [Tooltip("Select the button")]
     private ButtonOption m_button;
     
-    //public float value = 0f;
+    // NOT SERIALIZED
     private float m_timePressed, m_timeHeld;
-
+    // NOT SERIALIZED
     private bool registered = false;
-    private bool debugMode = false;
 
     [Tooltip("When the input is first pressed, pushed, etc.")]
     // InputDevice = left or right controller,
@@ -87,10 +74,7 @@ public class ButtonMapping
     public MyButtonEvent InputDeactivated;
     
     // Constructor
-    public void Init(InputDevice d, bool debug) {
-        device = d;
-        debugMode = debug;
-
+    public void Init() {
         // get label selected by the user
         m_featureLabel = Enum.GetName(typeof(ButtonOption), m_button);
         // find dictionary entry, depending on the nature of the button
@@ -104,15 +88,16 @@ public class ButtonMapping
                 m_isButton = true;
                 break;
         }
+        return;
     }
 
-    public void CheckStatus() {
-        if (m_isButton) CheckPressed();
-        else CheckJoystick();
+    public void CheckStatus(InputDevice device, bool debugMode) {
+        if (m_isButton) CheckPressed(device, debugMode);
+        else CheckJoystick(device, debugMode);
     }
     
     // Called when value needs to be updated
-    public void CheckPressed() {
+    public void CheckPressed(InputDevice device, bool debugMode) {
         // Useless value, just for this scope
         bool discardedValue;
         // We actually toggle between 0, 1, and -1
@@ -143,7 +128,7 @@ public class ButtonMapping
         }
     }
 
-    public void CheckJoystick() {
+    public void CheckJoystick(InputDevice device, bool debugMode) {
         Vector2 thumbPosition = Vector2.zero;
 
         if (!device.TryGetFeatureValue(m_inputJoystickUsage, out thumbPosition)) {

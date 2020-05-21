@@ -1,10 +1,23 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
 
 public class XRHand : MonoBehaviour
 {   
+
+    static readonly Dictionary<string, InputDeviceCharacteristics> availableCharacteristics = new Dictionary<string, InputDeviceCharacteristics>
+    {
+        {"leftController", InputDeviceCharacteristics.Left},
+        {"rightController", InputDeviceCharacteristics.Right},
+    };
+    private enum ControllerCharacteristic {
+        leftController,
+        rightController
+    };
+    [SerializeField]
+    private ControllerCharacteristic m_controllerCharacteristicChoice;
 
     // NOT SERIALIZED [Tooltip("What Input Device matches with the inputCharacteristics defined - retrieved from Init")]
     private InputDevice m_XRdevice;
@@ -90,6 +103,57 @@ public class XRHand : MonoBehaviour
     }
     */
 
+    private void Start() {
+        if (DebugLogger.current == null) m_debugMode = false;
+
+        // Update our m_inputCharacteristics
+        string characteristicLabel = Enum.GetName(typeof(ControllerCharacteristic), m_controllerCharacteristicChoice);
+        if (!availableCharacteristics.TryGetValue(characteristicLabel, out m_inputCharacteristics)) {
+            if (m_debugMode) DebugLogger.current.AddLine("Error finding devices w/ characteristics " + characteristicLabel);
+            return;
+        } 
+
+        // Update our inputs
+        ResetInputs();
+
+        StartCoroutine(CustomUpdate());
+    }
+
+    private IEnumerator CustomUpdate() {
+        var devices = new List<InputDevice>();
+        while(true) {
+            yield return null;
+            InputDevices.GetDevicesWithCharacteristics(m_inputCharacteristics, devices);
+            if (devices.Count == 1) {
+                CheckInputs(devices[0]);
+            } else if (m_debugMode) {
+                DebugLogger.current.AddLine("Found "+devices.Count.ToString()+" devices w/ characteristic " + m_inputCharacteristics.ToString());
+            }
+        }
+    }
+
+    public void ResetInputs() {
+        if (m_inputs.Count == 0) return;
+        // Reset input mappings
+        foreach(ButtonMapping bm in m_inputs) {
+            bm.Init();
+        }
+        // End
+        return;
+    }
+
+    public void CheckInputs(InputDevice d) {
+        // Return early if our XR device, thumbstick, or inputs are null
+        if (d == null || m_inputs.Count == 0) return;
+        // Check buttons
+        foreach(ButtonMapping bm in m_inputs) {
+            bm.CheckStatus(d, m_debugMode);
+        }
+        // End
+        return;
+    }
+
+
     public void Init(InputDevice ds, InputDeviceCharacteristics characteristics) {
         // Get input device characteristics from Init call from XRController
         m_XRdevice = ds;
@@ -139,72 +203,6 @@ public class XRHand : MonoBehaviour
             }
         }
         */
-        return;
-    }
-
-    public void ResetInputs() {
-        if (m_XRdevice == null || m_inputs.Count == 0) return;
-        // Reset input mappings
-
-        foreach(ButtonMapping bm in m_inputs) {
-            bm.Init(m_XRdevice, m_debugMode);
-        }
-
-        /*
-        m_inputs = new Dictionary<string, ButtonMapping>();
-        // Set thumbstick
-        m_thumbstick = new Axis2DMapping(m_XRdevice, CommonUsages.primary2DAxis,"Thumbstick", m_debugMode);
-        // Set buttons
-        m_inputs.Add("index", new ButtonMapping(m_XRdevice,CommonUsages.triggerButton, "Trigger", m_debugMode));
-        m_inputs.Add("grip",  new ButtonMapping(m_XRdevice,CommonUsages.gripButton, "Grip", m_debugMode));
-        m_inputs.Add("one",   new ButtonMapping(m_XRdevice,CommonUsages.primaryButton, "One", m_debugMode));
-        m_inputs.Add("two",   new ButtonMapping(m_XRdevice,CommonUsages.secondaryButton, "Two", m_debugMode));
-        m_inputs.Add("thumbClick",new ButtonMapping(m_XRdevice,CommonUsages.primary2DAxisClick, "Thumbstick Click", m_debugMode));
-        m_inputs.Add("start", new ButtonMapping(m_XRdevice,CommonUsages.menuButton, "Start Button", m_debugMode));
-        */
-        // End
-        return;
-    }
-
-    public void CheckInputs() {
-        // Return early if our XR device, thumbstick, or inputs are null
-        if (m_XRdevice == null || m_inputs.Count == 0) return;
-        // Check thumbstick
-        //m_thumbstick.CheckPressed();
-        // Check buttons
-        foreach(ButtonMapping bm in m_inputs) {
-            bm.CheckStatus();
-        }
-        // Return early
-        return;
-    }
-
-    public void UpdateInputs() {
-        /*
-        // Return early if our XR device, thumbstick, or inputs are null
-        if (m_XRdevice == null || m_thumbstick == null || m_inputs.Count == 0) return;
-        // Thumbstick
-        XRController.current.ThumbDirection(m_XRdevice, m_thumbstick.thumbPosition, m_thumbstick.distance, m_thumbstick.angle);
-        // Index
-        if (m_inputs["index"].value == 1f) XRController.current.TriggerDown(m_XRdevice);
-        if (m_inputs["index"].value == -1f) XRController.current.TriggerUp(m_XRdevice);
-        // Grip
-        if (m_inputs["grip"].value == 1f) XRController.current.GripDown(m_XRdevice);
-        if (m_inputs["grip"].value == -1f) XRController.current.GripUp(m_XRdevice);
-        // One
-        if (m_inputs["one"].value == 1f) XRController.current.OneDown(m_XRdevice);
-        if (m_inputs["one"].value == -1f) XRController.current.OneUp(m_XRdevice);
-        // Two
-        if (m_inputs["two"].value == 1f) XRController.current.TwoDown(m_XRdevice);
-        if (m_inputs["two"].value == -1f) XRController.current.TwoUp(m_XRdevice);
-        // ThumbPress
-        if (m_inputs["thumbClick"].value == 1f) XRController.current.ThumbPress(m_XRdevice);
-        if (m_inputs["thumbClick"].value == -1f) XRController.current.ThumbRelease(m_XRdevice);
-        // Start button
-        if (m_inputs["start"].value == 1f) XRController.current.StartDown(m_XRdevice);
-        if (m_inputs["start"].value == -1f) XRController.current.StartUp(m_XRdevice);
-        */
-        // End
         return;
     }
 

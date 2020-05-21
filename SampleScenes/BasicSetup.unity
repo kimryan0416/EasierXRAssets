@@ -464,7 +464,7 @@ PrefabInstance:
     - target: {fileID: 7218716128398791722, guid: 0d8f3f4a409d34ec1a1431bb21229539,
         type: 3}
       propertyPath: m_inputs.Array.data[0].m_button
-      value: 6
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 7218716128398791722, guid: 0d8f3f4a409d34ec1a1431bb21229539,
         type: 3}
@@ -599,7 +599,7 @@ PrefabInstance:
     - target: {fileID: 7218716129385118632, guid: 0d8f3f4a409d34ec1a1431bb21229539,
         type: 3}
       propertyPath: m_inputs.Array.data[0].m_button
-      value: 6
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 7218716129385118632, guid: 0d8f3f4a409d34ec1a1431bb21229539,
         type: 3}
@@ -651,6 +651,11 @@ PrefabInstance:
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 25239793}
+    - target: {fileID: 9161057828300681108, guid: 0d8f3f4a409d34ec1a1431bb21229539,
+        type: 3}
+      propertyPath: m_debugMode
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 9161057828300681110, guid: 0d8f3f4a409d34ec1a1431bb21229539,
         type: 3}
       propertyPath: m_activeStatus

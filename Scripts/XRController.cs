@@ -54,13 +54,14 @@ public class XRController : MonoBehaviour
         //      - this MUST be continuously updated
         //      - If the headset loses track of a controller, scripts cannot operate with it
         //      Therefore, we have to constantly check
-        StartCoroutine(CheckForControllers());
+        //StartCoroutine(CheckForControllers());
         // Ensure that initialization has been recorded - tells Update that it can run
         m_initialized = true;
         // End
         return;
     }
 
+    /*
     private IEnumerator CheckForControllers() {
         // Will be thrown out later
         List<InputDevice> toDiscard;
@@ -107,23 +108,7 @@ public class XRController : MonoBehaviour
             }
         }
     }
-
-    private void Update() {
-        // This won't run if we haven't initialized yet
-        if (!m_initialized) return;
-        // If our left hand isn't null, we process it
-        //  - Each hand has their own button inputs and update patterns
-        //  - We rely on each hand to update on their own
-        if (m_leftHand != null) {
-            m_leftHand.CheckInputs();
-            //m_leftHand.UpdateInputs();
-        }
-        // If our right hand isn't null, we process it
-        if (m_rightHand != null) {
-            m_rightHand.CheckInputs();
-            //m_rightHand.UpdateInputs();
-        }
-    }
+    */
 
     // Events for grip
     public event Action<InputDevice> onLeftGripDown, onLeftGripUp, onRightGripDown, onRightGripUp, onGripDown, onGripUp;

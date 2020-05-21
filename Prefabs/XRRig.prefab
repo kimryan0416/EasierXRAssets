@@ -63,6 +63,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5dbbf5e131d4a4d4abf77c4eb321d525, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_controllerCharacteristicChoice: 0
   m_inputs: []
   m_debugMode: 0
 --- !u!1 &7218716128547241996
@@ -422,6 +423,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5dbbf5e131d4a4d4abf77c4eb321d525, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_controllerCharacteristicChoice: 1
   m_inputs: []
   m_debugMode: 0
 --- !u!1 &7218716130156432322
@@ -621,7 +623,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Camera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 7218716129163061603}
     - target: {fileID: 5773876050461651016, guid: b7fb956223ec2462a9247ae799afc15c,
         type: 3}
       propertyPath: m_Name
