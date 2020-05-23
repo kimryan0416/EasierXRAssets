@@ -218,4 +218,8 @@ public class XRLocomotion : MonoBehaviour
         m_movementAllowed = mov;
         m_rotationAllowed = rot;
     }
+
+    public void Teleport(Collider platform, Collider trigger) {
+        m_rig.position = new Vector3(m_rig.position.x, m_rig.position.y, m_rig.position.z + 5f);
+    }
 }

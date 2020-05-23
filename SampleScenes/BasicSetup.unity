@@ -581,6 +581,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7218716128547241999, guid: 0d8f3f4a409d34ec1a1431bb21229539,
+        type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7218716129385118632, guid: 0d8f3f4a409d34ec1a1431bb21229539,
         type: 3}
       propertyPath: m_inputs.Array.size
@@ -653,8 +658,48 @@ PrefabInstance:
       objectReference: {fileID: 25239793}
     - target: {fileID: 9161057828300681108, guid: 0d8f3f4a409d34ec1a1431bb21229539,
         type: 3}
+      propertyPath: m_events.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161057828300681108, guid: 0d8f3f4a409d34ec1a1431bb21229539,
+        type: 3}
+      propertyPath: m_events.Array.data[0].m_triggerEvent.m_PersistentCalls.m_Calls.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161057828300681108, guid: 0d8f3f4a409d34ec1a1431bb21229539,
+        type: 3}
       propertyPath: m_debugMode
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161057828300681108, guid: 0d8f3f4a409d34ec1a1431bb21229539,
+        type: 3}
+      propertyPath: m_events.Array.data[0].mapName
+      value: Test
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161057828300681108, guid: 0d8f3f4a409d34ec1a1431bb21229539,
+        type: 3}
+      propertyPath: m_events.Array.data[0].m_triggerEvent.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161057828300681108, guid: 0d8f3f4a409d34ec1a1431bb21229539,
+        type: 3}
+      propertyPath: m_events.Array.data[0].m_triggerEvent.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161057828300681108, guid: 0d8f3f4a409d34ec1a1431bb21229539,
+        type: 3}
+      propertyPath: m_events.Array.data[0].m_triggerEvent.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 7218716128477742097}
+    - target: {fileID: 9161057828300681108, guid: 0d8f3f4a409d34ec1a1431bb21229539,
+        type: 3}
+      propertyPath: m_events.Array.data[0].m_triggerEvent.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: Teleport
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161057828300681108, guid: 0d8f3f4a409d34ec1a1431bb21229539,
+        type: 3}
+      propertyPath: m_events.Array.data[0].m_triggerEvent.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 9161057828300681110, guid: 0d8f3f4a409d34ec1a1431bb21229539,
         type: 3}
