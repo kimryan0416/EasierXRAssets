@@ -586,6 +586,11 @@ PrefabInstance:
       propertyPath: m_IsTrigger
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7218716128547241999, guid: 0d8f3f4a409d34ec1a1431bb21229539,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7218716129385118632, guid: 0d8f3f4a409d34ec1a1431bb21229539,
         type: 3}
       propertyPath: m_inputs.Array.size
@@ -705,6 +710,31 @@ PrefabInstance:
         type: 3}
       propertyPath: m_activeStatus
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161057829506009788, guid: 0d8f3f4a409d34ec1a1431bb21229539,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -5
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161057829506009788, guid: 0d8f3f4a409d34ec1a1431bb21229539,
+        type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 400
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161057829506009788, guid: 0d8f3f4a409d34ec1a1431bb21229539,
+        type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -50
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161057829506009789, guid: 0d8f3f4a409d34ec1a1431bb21229539,
+        type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4278255613
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161057829506009789, guid: 0d8f3f4a409d34ec1a1431bb21229539,
+        type: 3}
+      propertyPath: m_fontSizeBase
+      value: 20
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0d8f3f4a409d34ec1a1431bb21229539, type: 3}

@@ -46,6 +46,8 @@ public class DebugLogger : MonoBehaviour
     }
     [SerializeField] [Tooltip("Textbox used for Debugging")]
     private TextMeshProUGUI m_defaultTextbox;
+    // NOT SERIALIZED [Tooltip("Reference to the canvas group of the debug canvas")]
+    private CanvasGroup m_canvasGroup;
 
     /*
     [SerializeField] [Tooltip("all text boxes who should be updated")]
@@ -69,6 +71,7 @@ public class DebugLogger : MonoBehaviour
 
     private void Awake() {
         current = this;
+        m_canvasGroup = this.GetComponent<CanvasGroup>();
     }
     private void Start() {
         SetStatus(m_activeStatus);
@@ -92,39 +95,10 @@ public class DebugLogger : MonoBehaviour
         return;
     }
 
-    /*
-    private void Awake() {
-        current = this;
-        foreach(CustomTextBox ctb in m_textBoxes) {
-            ctb.maxLines = m_maxLines;
-            if (!m_textBoxDictionary.ContainsKey(ctb.id)) m_textBoxDictionary.Add(ctb.id, new List<CustomTextBox>());
-            m_textBoxDictionary[ctb.id].Add(ctb);
-        }
-    }
-    private void Update() {
-        foreach(CustomTextBox ctb in m_textBoxes) {
-            ctb.maxLines = m_maxLines;
-        }
-    }
-
-    public void AddLine(string s) {
-        foreach(CustomTextBox ctb in m_textBoxes) {
-            ctb.AddLine(s);
-        }
-    }
-    public void AddLine(string id, string s) {
-        List<CustomTextBox> ctbs;
-        if (m_textBoxDictionary.TryGetValue(id, out ctbs) && ctbs != null && ctbs.Count > 0) {
-            foreach(CustomTextBox ctb in ctbs) {
-                ctb.AddLine(s);
-            }
-        }
-    }
-    */
-
     public void SetStatus(bool en) {
         m_activeStatus = en;
-        m_defaultTextbox.gameObject.SetActive(en);
+        m_canvasGroup.alpha = (en) ? 1 : 0;
+        //m_defaultTextbox.gameObject.SetActive(en);
         foreach(GameObject g in m_debugObjects) {
             g.SetActive(en);
         }
