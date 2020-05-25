@@ -7,6 +7,66 @@ using System.Linq;
 [System.Serializable]
 public class CommonFunctions : MonoBehaviour
 {
+    public static List<Out> GetInRange<Out>(Transform origin, float rad) {
+        if (origin == null) return null;
+        Dictionary<Out, float> possible = new Dictionary<Out, float>();
+        Collider[] hitColliders = Physics.OverlapSphere(origin.position, rad);
+        foreach (Collider c in hitColliders) {
+            possible.Add(c.GetComponent<Out>(), Vector3.Distance(origin.position, c.transform.position));
+        }
+        List<Out> inRange = possible.OrderBy(x => x.Value).Select(pair => pair.Key).ToList();
+        return inRange;
+    }
+
+
+    public static List<Out> GetInRange<Out, Check>(Transform origin, float rad) {
+        if (origin == null) return null;
+        Dictionary<Out, float> possible = new Dictionary<Out, float>();
+        Collider[] hitColliders = Physics.OverlapSphere(origin.position, rad);
+        foreach (Collider c in hitColliders) {
+            if (c.GetComponent<Check>() != null) {
+                possible.Add(c.GetComponent<Out>(), Vector3.Distance(origin.position, c.transform.position));
+            }
+        }
+        List<Out> inRange = possible.OrderBy(x => x.Value).Select(pair => pair.Key).ToList();
+        return inRange;
+    }
+
+    public static List<Out> GetInRange<Out, Check>(Transform origin, float rad, List<int> layersToAvoid) {
+        if (origin == null) return null;
+        Dictionary<Out, float> possible = new Dictionary<Out, float>();
+        Collider[] hitColliders = Physics.OverlapSphere(origin.position, rad);
+        foreach (Collider c in hitColliders) {
+            if (c.GetComponent<Check>() != null && !layersToAvoid.Contains(c.gameObject.layer)) {
+                //inRange.Add(c.GetComponent<Out>());
+                possible.Add(c.GetComponent<Out>(), Vector3.Distance(origin.position, c.transform.position));
+            }
+        }
+        List<Out> inRange = possible.OrderBy(x => x.Value).Select(pair => pair.Key).ToList();
+        
+        //inRange = inRange.OrderBy(x => Vector3.Distance(origin.position, x.transform.position)).ToList();
+        return inRange;
+    }
+    public static List<Out> GetInRange<Out, Check>(Transform origin, float rad, List<int> layers, bool ignoreLayers) {
+        if (origin == null) return null;
+        Dictionary<Out, float> possible = new Dictionary<Out, float>();
+        Collider[] hitColliders = Physics.OverlapSphere(origin.position, rad);
+        foreach (Collider c in hitColliders) {
+            if (c.GetComponent<Check>() != null && !layers.Contains(c.gameObject.layer)) {
+                if (ignoreLayers && !layers.Contains(c.gameObject.layer)) {
+                    possible.Add(c.GetComponent<Out>(), Vector3.Distance(origin.position, c.transform.position));
+                }
+                else if (!ignoreLayers && layers.Contains(c.gameObject.layer)) {
+                    possible.Add(c.GetComponent<Out>(), Vector3.Distance(origin.position, c.transform.position));
+                }
+            }
+        }
+        List<Out> inRange = possible.OrderBy(x => x.Value).Select(pair => pair.Key).ToList();
+        
+        //inRange = inRange.OrderBy(x => Vector3.Distance(origin.position, x.transform.position)).ToList();
+        return inRange;
+    }
+
     public static List<Out> GetInRange<Out, Check, Exclude>(Transform origin, float rad) {
         if (origin == null) return null;
         Dictionary<Out, float> possible = new Dictionary<Out, float>();

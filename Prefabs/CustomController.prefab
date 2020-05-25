@@ -114,6 +114,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_leftHand: {fileID: 0}
   m_rightHand: {fileID: 0}
+  m_hoverCursorPrefab: {fileID: 4021145452538605680, guid: da507950246a74870ad5922fc05674db,
+    type: 3}
 --- !u!114 &6172647134401281613
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -128,10 +130,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_rig: {fileID: 0}
   m_movementOption: 0
-  m_resetOrientationWhileMoving: 0
+  m_resetOrientationWhileMoving: 1
   m_movementSpeed: 1.4
   m_rotationOption: 0
-  m_rotationRate: 10
+  m_rotationRate: 45
   m_movementAllowed: 1
   m_rotationAllowed: 1
   m_debugMode: 0
