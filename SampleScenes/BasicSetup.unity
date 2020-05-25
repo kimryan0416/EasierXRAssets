@@ -127,12 +127,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 7218716128477742096}
   m_PrefabAsset: {fileID: 0}
---- !u!20 &25239793 stripped
-Camera:
-  m_CorrespondingSourceObject: {fileID: 7218716129163061603, guid: 0d8f3f4a409d34ec1a1431bb21229539,
-    type: 3}
-  m_PrefabInstance: {fileID: 7218716128477742096}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &40379930
 GameObject:
   m_ObjectHideFlags: 0
@@ -1385,16 +1379,6 @@ PrefabInstance:
       propertyPath: m_inputs.Array.data[1].InputActive.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
       value: 2
       objectReference: {fileID: 0}
-    - target: {fileID: 8839393984227352982, guid: 0d8f3f4a409d34ec1a1431bb21229539,
-        type: 3}
-      propertyPath: m_debugMode
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9161057827817418656, guid: 0d8f3f4a409d34ec1a1431bb21229539,
-        type: 3}
-      propertyPath: m_Camera
-      value: 
-      objectReference: {fileID: 25239793}
     - target: {fileID: 9161057828300681107, guid: 0d8f3f4a409d34ec1a1431bb21229539,
         type: 3}
       propertyPath: m_Name
@@ -1445,12 +1429,6 @@ PrefabInstance:
       propertyPath: m_events.Array.data[0].m_triggerEvent.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
-    - target: {fileID: 9161057828300681108, guid: 0d8f3f4a409d34ec1a1431bb21229539,
-        type: 3}
-      propertyPath: m_hoverCursorPrefab
-      value: 
-      objectReference: {fileID: 4021145452538605680, guid: da507950246a74870ad5922fc05674db,
-        type: 3}
     - target: {fileID: 9161057828300681110, guid: 0d8f3f4a409d34ec1a1431bb21229539,
         type: 3}
       propertyPath: m_activeStatus
