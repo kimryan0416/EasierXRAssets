@@ -24,13 +24,27 @@ public class XRGrabVolume : MonoBehaviour
         set {   m_collisionRadius = value;  }
     }
 
-    [SerializeField] [Tooltip("List of layers that the grab volume should avoid or only observe")]
-    private List<string> m_layers = new List<string>();
-    private List<int> m_layerInts = new List<int>();
-    private enum LayerOption {Disable_Layers, Ignore_Layers, Look_For_Layers}
-    private bool layerState = false;
-    [SerializeField] [Tooltip("Should the grab volume avoid or only look for these tags?")]
-    private LayerOption m_layerOption = LayerOption.Disable_Layers;
+    [SerializeField] [Tooltip("List of layers that the grab volume should ignore")]
+    private List<string> m_layersToIgnore = new List<string>();
+    //[SerializeField] [Tooltip("List of layers that the grab volume should  observe")]
+    //private List<string> m_layersToCheck = new List<string>();
+    private List<int> m_layersToIgnoreInts = new List<int>();
+    //private List<int> m_layersToCheckInts = new List<int>();
+    //private enum LayerOption {Off, Ignore_Layers, Look_For_Layers}
+    //private bool layerState = false;
+    //[SerializeField] [Tooltip("Should the grab volume avoid or only look for these layers?")]
+    //private LayerOption m_layerOption = LayerOption.Off;
+
+    [SerializeField] [Tooltip("List of Transforms that the grab volume should ignore")]
+    private List<Transform> m_transformsToIgnore = new List<Transform>();
+    //[SerializeField] [Tooltip("List of Transforms that the grab volume should observe")]
+    //private List<Transform> m_transformsToCheck = new List<Transform>();
+    private List<int> m_transformsToIgnoreInts = new List<int>();
+    //private List<int> m_transformsToCheckInts = new List<int>();
+    //private enum TransformOption {Off, Ignore_Transforms, Look_For_Transforms}
+    //private bool transformState = false;
+    //[SerializeField] [Tooltip("Should the grab volume avoid or only look for these transforms?")]
+    //private TransformOption m_transformOption = TransformOption.Off;
 
     /*
     [SerializeField] [Tooltip("List of scripts that the grab volume should avoid or only observe")]
@@ -86,10 +100,22 @@ public class XRGrabVolume : MonoBehaviour
         if (m_collisionOrigin == null) m_collisionOrigin = this.transform;
         m_originalColor = m_collisionOrigin.GetComponent<Renderer>().material.GetColor("_Color");
         // Set up our layers
-        foreach(string m_layer in m_layers) {
-            m_layerInts.Add(LayerMask.NameToLayer(m_layer));
+        foreach(string m_layer in m_layersToIgnore) {
+            m_layersToIgnoreInts.Add(LayerMask.NameToLayer(m_layer));
         }
-        layerState = (m_layerOption == LayerOption.Ignore_Layers) ? true : false;
+        //foreach(string m_layer in m_layersToCheck) {
+        //    m_layersToCheckInts.Add(LayerMask.NameToLayer(m_layer));
+        //}
+        // Set up our transform IDs
+        foreach(Transform m_transform in m_transformsToIgnore) {
+            m_transformsToIgnoreInts.Add(m_transform.GetInstanceID());
+        }
+        //foreach(Transform m_transform in m_transformsToCheck) {
+        //    m_transformsToCheckInts.Add(m_transform.GetInstanceID());
+        //}
+
+        //layerState = (m_layerOption == LayerOption.Ignore_Layers) ? true : false;
+        //transformState = (m_transformOption == TransformOption.Ignore_Transforms) ? true : false;
 
         m_isActive = shouldStart;
     }
@@ -98,12 +124,59 @@ public class XRGrabVolume : MonoBehaviour
         // End early if we are deactivated
         if (!m_isActive) return;
         // Get all gameobjects in range
-        if (m_layerOption == LayerOption.Disable_Layers) {
+        m_inRange = CommonFunctions.GetInRangeIgnoreLayersIgnoreTransforms<Transform, XRGrabbable>(m_collisionOrigin, m_collisionRadius, m_layersToIgnoreInts, m_transformsToIgnoreInts);
+        /*
+        switch(m_layerOption) {
+            case(LayerOption.Off):
+                switch(m_transformOption) {
+                    case(TransformOption.Off):
+                        m_inRange = CommonFunctions.GetInRange<Transform, XRGrabbable>(m_collisionOrigin, m_collisionRadius);
+                        break;
+                    case(TransformOption.Ignore_Transforms):
+                        m_inRange = CommonFunctions.GetInRangeIgnoreTransforms<Transform, XRGrabbable>(m_collisionOrigin, m_collisionRadius, m_transformIDs);
+                        break;
+                    case(TransformOption.Look_For_Transforms):
+                        m_inRange = CommonFunctions.GetInRangeCheckTransforms<Transform, XRGrabbable>(m_collisionOrigin, m_collisionRadius, m_transformIDs);
+                        break;
+                }
+                break;
+            case(LayerOption.Ignore_Layers):
+                switch(m_transformOption) {
+                    case(TransformOption.Off):
+                        m_inRange = CommonFunctions.GetInRangeIgnoreLayers<Transform, XRGrabbable>(m_collisionOrigin, m_collisionRadius, m_layerInts);
+                        break;
+                    case(TransformOption.Ignore_Transforms):
+                        m_inRange = CommonFunctions.GetInRangeIgnoreLayersIgnoreTransforms<Transform, XRGrabbable>(m_collisionOrigin, m_collisionRadius, m_layerInts, m_transformIDs);
+                        break;
+                    case(TransformOption.Look_For_Transforms):
+                        m_inRange = CommonFunctions.GetInRangeIgnoreLayersCheckTransforms<Transform, XRGrabbable>(m_collisionOrigin, m_collisionRadius, m_layerInts, m_transformIDs);
+                        break;
+                }
+                break;
+            case(LayerOption.Look_For_Layers):
+                switch(m_transformOption) {
+                    case(TransformOption.Off):
+                        m_inRange = CommonFunctions.GetInRangeCheckLayers<Transform, XRGrabbable>(m_collisionOrigin, m_collisionRadius, m_layerInts);
+                        break;
+                    case(TransformOption.Ignore_Transforms):
+                        m_inRange = CommonFunctions.GetInRangeCheckLayersIgnoreTransforms<Transform, XRGrabbable>(m_collisionOrigin, m_collisionRadius, m_layerInts, m_transformIDs);
+                        break;
+                    case(TransformOption.Look_For_Transforms):
+                        m_inRange = CommonFunctions.GetInRangeCheckLayersCheckTransforms<Transform, XRGrabbable>(m_collisionOrigin, m_collisionRadius, m_layerInts, m_transformIDs);
+                        break;
+                }
+                break;
+        }
+        */
+
+        /*
+        if (m_layerOption == LayerOption.Off) {
             m_inRange = CommonFunctions.GetInRange<Transform, XRGrabbable>(m_collisionOrigin, m_collisionRadius);
         }
         else {
             m_inRange = CommonFunctions.GetInRange<Transform, XRGrabbable>(m_collisionOrigin, m_collisionRadius, m_layerInts, layerState);
         }
+        */
         if (m_debugMode) DebugLogger.current.AddLine(m_inRange.Count.ToString());
 
         // Hover cursors
@@ -115,8 +188,34 @@ public class XRGrabVolume : MonoBehaviour
         }
     }
 
+    public void AddTransformIgnore(Transform t) {
+        int tID = t.GetInstanceID();
+        if (!m_transformsToIgnoreInts.Contains(tID)) {
+            m_transformsToIgnoreInts.Add(tID);
+        }
+    }
+    public void RemoveTransformIgnore(Transform t) {
+        int tID = t.GetInstanceID();
+        if (m_transformsToIgnoreInts.Contains(tID)) {
+            m_transformsToIgnoreInts.Remove(tID);
+        }
+    }
     /*
+    public void AddTransformCheck(Transform t) {
+        int tID = t.GetInstanceID();
+        if (!m_transformsToCheckInts.Contains(tID)) {
+            m_transformsToCheckInts.Add(tID);
+        }
+    }
+    public void RemoveTransformCheck(Transform t) {
+        int tID = t.GetInstanceID();
+        if (m_transformsToCheckInts.Contains(tID)) {
+            m_transformsToCheckInts.Remove(tID);
+        }
+    }
+    */
 
+    /*
     public IEnumerator CustomUpdate() {
         // update boolean to tell system that this coroutine is running
         m_updateRunning = true;

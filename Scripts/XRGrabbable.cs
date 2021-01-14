@@ -13,6 +13,10 @@ public class XRGrabbable : MonoBehaviour
     private List<XRHand> m_semanticGrabbers = new List<XRHand>();
     // NOT SERIALIZED
     private XRHand m_mainGrabber;
+    public XRHand mainGrabber {
+        get {return m_mainGrabber;}
+        set {}
+    }
     // NOT SERIALIZED
     private Dictionary<XRHand, Transform> heldBy = new Dictionary<XRHand, Transform>();
 
@@ -36,41 +40,6 @@ public class XRGrabbable : MonoBehaviour
 
     [SerializeField] [Tooltip("Deubg mode toggle")]
     private bool m_debugMode = false;
-    
-    /*
-    #region Private Variables
-    private Dictionary<Transform, bool> snapTransformsTaken = new Dictionary<Transform, bool>();
-    private List<XRHand> grabbers = new List<XRHand>();
-    private Dictionary<XRHand, Transform> heldBy = new Dictionary<XRHand, Transform>();
-    private bool m_grabbedKinematic;
-    private Transform originalParent = null;
-    private int numGrabbersAllowed = 1;
-    private int m_originalLayer;
-    private Dictionary<int, int> m_childrenOriginalLayers = new Dictionary<int, int>();
-    #endregion
-    */
-
-
-    // Think of it like this:
-    // Each object that has this script can be grabbed by XRHand
-    // There is one caveat: how do we handle two (or more) hands grabbing something simultaneously? 
-    // So the logic will run like this:
-    // - There is an infinite number of grabbers allowed to grab this object. However, there can only be one "main" grabber
-    // - This "main" grabber is where the object focuses its orientation and position on
-    // - Any additional hands grabbing the object only grab it semantically... we'll explain this more in detail
-    // - When a hand attempts to grab the object, it checks if the main grabber null or not.
-    //      1. If null, it'll set this grabber as the main grabber
-    //      2. If not null, we label it as a semantic grabber.
-    // - We also need to take into account snap transforms
-    //      - If we have any snap transforms set, that means that the object must snap to the main grabber's position and whatnot.
-    //      - If no snap transforms are set, we don't need to care about snap transforming to fit the hand's orientation and position
-    // - The main loop runs:
-    //      1. If we don't have a main grabber, we check if any semantic grabbers are available. If any are, we grab the oldest grabber and set that to the main grabber
-    //          1.a If no semantic grabbers are present as well, we return
-    //      2. We check if the object is transferring to the object yet (aka flying to the hand)
-    //          2a. If it is, we wait for that loop to finish
-    //      3. We get the current position and orientation of the main grabber
-    //      4. We set it this object.. unless we're using a snap transform, in which case we make the proper adjustments for offsets
 
     public class SnapTransformData {
         public bool taken;
@@ -82,6 +51,28 @@ public class XRGrabbable : MonoBehaviour
             rotOffset = Quaternion.Inverse(snap.rotation * Quaternion.Inverse(parent.rotation));
         }
     }
+
+    // Think of it like this:
+    // Each object that has this script can be grabbed by XRHand
+    // There is one caveat: how do we handle two (or more) hands grabbing something simultaneously? 
+    // The logic runs like this:
+    // - There is an infinite number of grabbers allowed to grab this object. However, there can only be one "main" grabber
+    // - This "main" grabber is where the object focuses its orientation and position on
+    // - Any additional hands grabbing the object only grab it semantically... we'll explain this more in detail
+    // - When a hand attempts to grab the object, it checks if the main grabber null or not.
+    //      1. If null, it'll set this grabber as the main grabber.
+    //          This also entails setting all the rigidbody values to fit that scenario (aka mkaing the rb kinematic, not affected by gravity, etc)
+    //      2. If not null, we label it as a semantic grabber.
+    // - We also need to take into account snap transforms
+    //      - If we have any snap transforms set, that means that the object must snap to the main grabber's position and whatnot.
+    //      - If no snap transforms are set, we don't need to care about snap transforming to fit the hand's orientation and position
+    // - When a hand attempts to let go of the object:
+    //      1. It removes the hand from the total list of grabbers (m_grabbers);
+    //      2. Checks if the hand is the same as the main grabber
+    //          - If so, have to check if there are any semantic grabbers that can replace the main grabber
+    //              - If there are, we replace the main grabber with the oldest semantic grabber and remove that grabber from the semantic list
+    //              - If not, then we reset the object with its original rigidbody values alongside the position and angular velocity from the hand
+    //      3. If not, we simply remove it from our list of semantic grabbers
 
     private void Start() {
         if (DebugLogger.current == null) m_debugMode = false;
@@ -116,7 +107,11 @@ public class XRGrabbable : MonoBehaviour
     }
 
     private void FixedUpdate() {
-        if (m_debugMode) DebugLogger.current.AddLine("SemanticGrabbers: " + m_semanticGrabbers.Count);
+        if (m_debugMode) {
+            string mainName = (m_mainGrabber != null) ? m_mainGrabber.gameObject.name : "NONE";
+            DebugLogger.current.AddLine("Main Grabber: " + mainName);
+            DebugLogger.current.AddLine("SemanticGrabbers: " + m_semanticGrabbers.Count);
+        }
     }
 
     // Called by XRHand to initiate grabbing
@@ -131,14 +126,12 @@ public class XRGrabbable : MonoBehaviour
             m_RigidBody.isKinematic = true;
             m_RigidBody.velocity = Vector3.zero;
             m_RigidBody.angularVelocity = Vector3.zero;
-            this.gameObject.layer = LayerMask.NameToLayer("AvoidHover");
-            Transform[] children = this.GetComponentsInChildren<Transform>();
-            foreach (Transform c in children) {
-                c.gameObject.layer = LayerMask.NameToLayer("AvoidHover");
-            }
+            //this.gameObject.layer = LayerMask.NameToLayer("AvoidHover");
+            //Transform[] children = this.GetComponentsInChildren<Transform>();
+            //foreach (Transform c in children) {
+            //    c.gameObject.layer = LayerMask.NameToLayer("AvoidHover");
+            //}
             m_mainGrabber = g;
-            //heldBy.Add(cg, to);
-            //if (grabbers.Count == 1 && grabbers[0].shouldSnap) {    SnapToTransform();  }
         } else {
             m_semanticGrabbers.Add(g);
         }
@@ -165,11 +158,11 @@ public class XRGrabbable : MonoBehaviour
                 m_RigidBody.isKinematic = m_grabbedKinematic;
                 m_RigidBody.velocity = linVel * 2f;
                 m_RigidBody.angularVelocity = angVel;
-                this.gameObject.layer = m_originalLayer;
-                Transform[] children = this.GetComponentsInChildren<Transform>();
-                foreach (Transform c in children) {
-                    c.gameObject.layer = m_childrenOriginalLayers[c.gameObject.GetInstanceID()];
-                }
+                //this.gameObject.layer = m_originalLayer;
+                //Transform[] children = this.GetComponentsInChildren<Transform>();
+                //foreach (Transform c in children) {
+                //    c.gameObject.layer = m_childrenOriginalLayers[c.gameObject.GetInstanceID()];
+                //}
             }
         } else {
             m_semanticGrabbers.Remove(hand);
@@ -177,55 +170,11 @@ public class XRGrabbable : MonoBehaviour
         return;
     }
 
-    /*
-    public void GrabEnd(XRHand cg, Vector3 linearVelocity, Vector3 angularVelocity) {
-
-        RemoveController(cg);
-        this.gameObject.layer = m_originalLayer;
-        Transform[] children = this.GetComponentsInChildren<Transform>();
-        foreach (Transform c in children) {
-            c.gameObject.layer = m_childrenOriginalLayers[c.gameObject.GetInstanceID()];
-        }
-        if (grabbers.Count == 0) {
-            m_RigidBody.isKinematic = m_grabbedKinematic;
-            m_RigidBody.velocity = linearVelocity;
-            m_RigidBody.angularVelocity = angularVelocity;
-        }
-    }
-    */
-
-    /*
-    public void AddGrabber(XRHand cg, Transform to) {
-        grabbers.Add(cg);
-        heldBy.Add(cg, to);
-        if (to != null) {   snapTransformsTaken[to] = true; }
-        if (grabbers.Count == 1 && grabbers[0].shouldSnap) {    SnapToTransform();  }
-    }
-    */
-
-    /*
-    public void RemoveController(XRHand cg) {
-        Transform t = null;
-        if (heldBy.TryGetValue(cg, out t)) {
-            if (t != null) {    snapTransformsTaken[t] = false; }
-        }
-        heldBy.Remove(cg);
-        int grabberIndex = grabbers.IndexOf(cg);
-        if (grabberIndex > -1) {    grabbers.RemoveAt(grabberIndex);    }
-        if (grabbers.Count > 0) {  SnapToTransform();   }
-    }
-    public List<InputDevice> GetGrabbers() {
-        List<InputDevice> toReturn = new List<InputDevice>();
-        foreach(XRHand cg in grabbers) { toReturn.Add(cg.XRDevice);   }
+    public List<XRHand> GetGrabbers() {
+        List<XRHand> toReturn = new List<XRHand>();
+        foreach(XRHand hand in m_grabbers.Keys) { toReturn.Add(hand);   }
         return toReturn;
     }
-    public InputDevice GetGrabber() {
-        return grabbers[0].XRDevice;
-    }
-    public bool CanBeGrabbed() {
-        return numGrabbersAllowed - grabbers.Count > 0;
-    }
-    */
 
     private Transform FindClosestSnapTransform(XRHand cg) {
         Transform closest = null;

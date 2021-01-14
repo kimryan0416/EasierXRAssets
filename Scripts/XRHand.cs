@@ -192,6 +192,7 @@ public class XRHand : MonoBehaviour
         if (closest != null && m_grabbedObject == null) {
             closest.GetComponent<XRGrabbable>().GrabBegin(this);
             m_grabbedObject = closest.GetComponent<XRGrabbable>();
+            m_grabVol.AddTransformIgnore(m_grabbedObject.transform);
         }
         return;
     }
@@ -199,6 +200,7 @@ public class XRHand : MonoBehaviour
     public void GripUp() {
         if (m_grabbedObject == null) return;
         m_grabbedObject.GrabEnd(this,m_velocity,m_angularVelocity);
+        m_grabVol.RemoveTransformIgnore(m_grabbedObject.transform);
         m_grabbedObject = null;
         /*
         OVRPose localPose = new OVRPose { position = OVRInput.GetLocalControllerPosition(m_OVRController), orientation = OVRInput.GetLocalControllerRotation(m_OVRController) };

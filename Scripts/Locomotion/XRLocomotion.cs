@@ -18,11 +18,13 @@ public class XRLocomotion : MonoBehaviour
     */
 
     // NOT SERIALIZED
-    private enum MovementOption {Continuous,Instant,Teleport,SmoothDamp}
+    private enum MovementOption {Translate,Instant,Teleport,SmoothDamp}
     [SerializeField] [Tooltip("How will our player move?")]
-    private MovementOption m_movementOption = MovementOption.Instant;
+    private MovementOption m_movementOption = MovementOption.Translate;
     [SerializeField] [Tooltip("Will thumbstick movement be relative to your head's orientation while walking? If not, it'll only be relative to your head's orientation at rest")]
     private bool m_resetOrientationWhileMoving = false;
+    [SerializeField] [Tooltip("Will we move only relative to X and Z, or will we also consider the Y position?")]
+    private bool m_flatMovement = true;
     [SerializeField] [Tooltip("Speed of player in M/S for thumbstick")]
     private float m_movementSpeed = 1.4f;
     // NOT SERIALIZED [Tooltip("Storing a movement translation")]
@@ -74,28 +76,7 @@ public class XRLocomotion : MonoBehaviour
 
     private void Start() {
         // Set the rig's initial foward position
-        m_rigInitialForward = m_rig.transform.forward;    
-        // Adjust movement option    
-        /*
-        switch(m_movementOption) {
-            case(MovementOption.Thumbstick):
-                XRController.current.onThumbDirection += Movement;
-                break;
-            case(MovementOption.Teleportation):
-                // Add teleport stuff
-                break;
-            case(MovementOption.Both):
-                XRController.current.onThumbDirection += Movement;
-                // Add teleport stuff
-                break;
-        }
-        // Adjust rotation option
-        switch(m_rotationOption) {
-            case(RotationOption.Thumbstick):
-                XRController.current.onThumbDirection += Rotation;
-                break;
-        }
-        */
+        m_rigInitialForward = m_rig.transform.forward;
         // End
         return;
     }
@@ -112,8 +93,11 @@ public class XRLocomotion : MonoBehaviour
     */
 
     // Particularly when moving with the joystick
-    public void ContinuousMovement(InputDevice device, float buttonVal, Vector2 pos) {
-        // Check - return early if the XR Devices don't correspond with each other
+    public void Translate(InputDevice device, float buttonVal, Vector2 pos) {
+        Translate(pos);
+        return;
+        /*
+        // Check - return early if you're not allowed to move yet
         if (!m_movementAllowed) return;
         //if (m_rigEC.colliding) return;
         // So joystick movement will work like this:
@@ -137,6 +121,43 @@ public class XRLocomotion : MonoBehaviour
             //Vector3 smoothedDelta = Vector3.MoveTowards(m_rig.position, m_rig.position + translation, m_movementSpeed * Time.deltaTime);
             //m_rig.gameObject.GetComponent<Rigidbody>().MovePosition(smoothedDelta);
         }
+        return;
+        */
+    }
+
+    public void Translate(Vector2 pos) {
+        // Check - return early if you're not allowed to move yet
+        if (!m_movementAllowed) return;
+
+        // Grab the angle offset from "m_rotationOffset"
+        float angleOffset = m_rotationOffset;
+        // Get the magnitude of the Vector2 pos;
+        float distance = pos.magnitude;
+
+        // Movement by translation is heavily reliant on what the translation is relative to.
+        // That relative origin, per se, is adjustable by a boolean called "m_resetOrientationWhileMoving"
+        //      If TRUE, we reset the orientation so that it is relative to the camera's forward position constantly...
+        //      If FALSE, we reset the orientation to the camera's forward position only when we slow down
+        if (m_resetOrientationWhileMoving || distance < 0.1f) {
+            m_camForward = mainCamera.transform.forward;
+            m_camRight = mainCamera.transform.right;
+        }
+
+        // If we're focusing on only flat movement (aka only X and Z), we set the Y to 0
+        if (m_flatMovement) {
+            m_camForward.y = 0f;
+            m_camRight.y = 0f;
+        }
+
+        // Determine the amount of translation based on the XY pos. This is relative to that "relative origin" mentioned above.
+        m_movementTranslation = Quaternion.AngleAxis(-1f * angleOffset,Vector3.up) * (m_camForward * pos.y + m_camRight * pos.x) * m_movementSpeed * Time.deltaTime;
+        
+        // If the amount of translation is greater than 0, we gotta translate.
+        if (m_movementTranslation.magnitude>0) {
+            m_rig.Translate(m_movementTranslation);
+        }
+        
+        // End
         return;
     }
 
